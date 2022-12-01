@@ -19,7 +19,7 @@ build_universal:
     paths:
     - dist
   only:
-  - master
+  - tags
 
 publish_universal:
   stage: publish
@@ -27,5 +27,5 @@ publish_universal:
   script:
   - twine upload --disable-progress-bar dist/*
   only:
-  - master
+  - tags
 
