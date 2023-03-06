@@ -1,31 +1,52 @@
 stages:
 - build
 - publish
+- release
 
-image: $IMAGE_REPOSITORY/library/python:3.10-alpine
+image: $IMAGE_REPOSITORY/python:3.10-alpine
 
 .env_before_script: &env_before_script
   before_script:
     - pip install -U pip
     - pip install 'twine>=4.0.1'
+
+.build_env_before_script: &build_env_before_script
+  before_script:
     - export BUILD_VERSION=$(echo ${CI_COMMIT_TAG:-v0.0.1} | tr -d v)
 
 build_universal:
   stage: build
   <<: *env_before_script
+  <<: *build_env_before_script
   script:
-  - python3 setup.py bdist_wheel --universal
+    - python3 setup.py bdist_wheel --universal
   artifacts:
     paths:
-    - dist
+      - dist
   only:
-  - tags
+    - tags
 
 publish_universal:
   stage: publish
   <<: *env_before_script
   script:
-  - twine upload --disable-progress-bar dist/*
+    - twine upload --disable-progress-bar dist/*
+  needs:
+    - build_universal
   only:
-  - tags
+    - tags
 
+docker_image_release:
+  stage: release
+  image: $IMAGE_REPOSITORY/docker:latest
+  <<: *build_env_before_script
+  script:
+    - docker login -u "$DOCKERHUB_USER" -p "$DOCKERHUB_TOKEN"
+    - docker build --no-cache --build-arg BUILD_VERSION -t "$DOCKERHUB_USER/certbot-dns-norisnetwork:latest" -t "$DOCKERHUB_USER/certbot-dns-norisnetwork:$BUILD_VERSION"  .
+    - docker push -a "$DOCKERHUB_USER/certbot-dns-norisnetwork"
+  when: delayed
+  start_in: 300 seconds
+  needs:
+    - publish_universal
+  only:
+    - tags

@@ -127,24 +127,20 @@ For all the available command-line options originating from `Certbot` you can us
 
 ## Docker
 
-In order to create a docker container with a `certbot-dns-norisnetwork` installation, create the following `Dockerfile`:
+In order to create a docker container with a `certbot-dns-norisnetwork` installation,  you can use our **official Docker image**:
 
-```
-FROM certbot/certbot
-RUN pip install certbot-dns-norisnetwork
-```
-
-Proceed to build the image::
 ```sh
-docker build -t certbot-dns-noris .
+docker pull norisnetwork/certbot-dns-norisnetwork
 ```
+
+> Note: **Before running the app**, make sure that the path to credentials (set by `--dns-noris-credentials` arg) reside in a volume-mounted directory (e.g. in `/etc/letsencrypt/`).
 
 The application can be run as follows::
 ```sh
 docker run --rm \
     -v /var/lib/letsencrypt:/var/lib/letsencrypt \
     -v /etc/letsencrypt:/etc/letsencrypt \
-    certbot-dns-noris certonly \
+    norisnetwork/certbot-dns-norisnetwork certonly \
     --authenticator dns-noris \
     --dns-noris-propagation-seconds 60 \
     --dns-noris-credentials /etc/letsencrypt/credentials.ini \
