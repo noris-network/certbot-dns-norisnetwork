@@ -1,0 +1,23 @@
+# Git related
+/.git/
+/.gitignore
+
+# Build
+/build/
+*.egg-info/
+/MANIFEST
+
+# Python related
+/**/__pycache__/
+/pylintrc
+
+# vs code
+.vscode/
+.editorconfig
+
+# Tests folder
+/test/
+
+# Docker related
+/Dockerfile
+/.dockerignore
