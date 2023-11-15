@@ -20,6 +20,7 @@ build_universal:
   <<: *build_env_before_script
   script:
     - python3 setup.py bdist_wheel --universal
+    - pip list
   artifacts:
     paths:
       - dist

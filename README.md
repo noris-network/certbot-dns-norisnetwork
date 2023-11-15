@@ -148,7 +148,7 @@ docker run --rm \
     --keep-until-expiring --non-interactive \
     --server https://acme-v02.api.letsencrypt.org/directory \
     -m 'user@mail.com'
-    -d example.com -d '*.example.com'
+    -d example.com -d '*.subdomain.example.com'
 ```
 
 
