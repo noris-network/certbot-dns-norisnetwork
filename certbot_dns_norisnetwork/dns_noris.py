@@ -52,7 +52,9 @@ class Authenticator(dns_common.DNSAuthenticator):
         )
 
     def _cleanup(self, domain: str, validation_name: str, validation: str) -> None:
-        self._get_serviceapi_client().del_txt_record(domain, validation_name)
+        self._get_serviceapi_client().del_txt_record(
+            domain, validation_name, validation
+        )
 
     def _get_serviceapi_client(self) -> "_ServiceAPIClient":
         if not self.credentials:
@@ -116,7 +118,7 @@ class _ServiceAPIClient:
         :raises certbot.errors.PluginError: if an error occurs communicating with the Service API
         """
         try:
-            zone_id, zone_name, dns_rrs_endpoint = self._find_managed_zone_id(domain)
+            zone_id, zone_name, _ = self._find_managed_zone_id(domain)
             logger.info("Domain found: DNS zone with id %s", zone_id)
         except errors.PluginError as exc:
             logger.error("Error finding DNS zone using the Service API: %s", exc)
@@ -127,23 +129,19 @@ class _ServiceAPIClient:
         logger.info(
             "Using record_name: %s from original: %s", record_name, original_record_name
         )
-        record = self.get_existing_txt_rrs(dns_rrs_endpoint, record_name)
-        if record is not None:
-            if record["rdata"] == record_content:
-                logger.info("Record with ID %s is already there!", record["id"])
-                return
-            logger.info("Deleting existing record with ID %s", record["id"])
-            self._delete_txt_record(zone_id, record["id"])
 
         logger.info("Insert new TXT record with name %s.", record_name)
         self._insert_txt_record(zone_id, record_name, record_content, record_ttl)
 
-    def del_txt_record(self, domain: str, record_name: str) -> None:
+    def del_txt_record(
+        self, domain: str, record_name: str, record_content: str
+    ) -> None:
         """
         Delete a TXT record using the supplied information.
 
         :param str domain: The domain to use to look up the managed zone.
         :param str record_name: The record name (typically beginning with '_acme-challenge.').
+        :param str record_content: The record value normalized with double quotes.
         :raises certbot.errors.PluginError: if an error occurs communicating with the ISPConfig API
         """
         try:
@@ -159,7 +157,9 @@ class _ServiceAPIClient:
             "Using record_name: %s from original: %s", record_name, original_record_name
         )
 
-        record = self.get_existing_txt_rrs(dns_rrs_endpoint, record_name)
+        record = self.get_existing_txt_rrs(
+            dns_rrs_endpoint, record_name, record_content
+        )
 
         if record is not None:
             logger.info("Delete TXT record with ID: %s", record["id"])
@@ -234,7 +234,7 @@ class _ServiceAPIClient:
         return zone_id, zone_name, dns_rrs_endpoint
 
     def get_existing_txt_rrs(
-        self, endpoint: str, record_name: str
+        self, endpoint: str, record_name: str, record_content: str
     ) -> Optional[Dict[str, Any]]:
         """
         Get existing TXT records from the RRset for the record name.
@@ -244,6 +244,7 @@ class _ServiceAPIClient:
 
         :param str endpoint: The endpoint to get DNS RRs for the specific zone ID.
         :param str record_name: The record name (typically beginning with '_acme-challenge.').
+        :param str record_content: The record value normalized with double quotes.
 
         :returns: TXT record value or None
         :rtype: `string` or `None`
@@ -256,6 +257,7 @@ class _ServiceAPIClient:
             if (
                 record["name_prefix"] == record_name
                 and record["dns_rr_type"]["_title"] == "TXT"
+                and record["rdata"] == f'"{record_content}"'
             ):
                 return record
         return None
