@@ -55,7 +55,9 @@ class AuthenticatorTest(
         self.auth._attempt_cleanup = True
         self.auth.cleanup([self.achall])
 
-        expected = [mock.call.del_txt_record(DOMAIN, "_acme-challenge." + DOMAIN)]
+        expected = [
+            mock.call.del_txt_record(DOMAIN, "_acme-challenge." + DOMAIN, mock.ANY)
+        ]
         self.assertEqual(expected, self.mock_client.mock_calls)
 
 
@@ -102,35 +104,6 @@ class ServiceAPIClientTest(unittest.TestCase):
                         "recordsFiltered": 1,
                     }
                     return zone_info
-                if "/data/dns/record/" in endpoint:
-                    # called by function get_existing_txt_rrs
-                    # returns records not related with _acme_challenge
-                    record = {
-                        "_data": [
-                            {
-                                "id": 250,
-                                "name_prefix": "test",
-                                "zone": {
-                                    "id": 42066,
-                                    "_target": "dns_zone",
-                                    "_title": DOMAIN,
-                                },
-                                "dns_rr_type": {
-                                    "id": 16,
-                                    "_target": "dns_rr_type",
-                                    "_title": "TXT",
-                                },
-                                "ttl": None,
-                                "mx_preference": None,
-                                "rdata": '"foo" "bar"',
-                                "effective_rdata": '"foo" "bar"',
-                                "_title": 'test TXT "foo" "bar"',
-                                "_target": "dns_rr",
-                            }
-                        ],
-                        "recordsFiltered": 1,
-                    }
-                    return record
             elif method == "PATCH":
                 # called by function _insert_txt_record or _del_txt_record
                 pass
@@ -142,12 +115,9 @@ class ServiceAPIClientTest(unittest.TestCase):
         self.client.add_txt_record(
             DOMAIN, self.record_name, self.record_content, self.record_ttl
         )
-        self.assertEqual(3, len(self.client._api_request.mock_calls))
+        self.assertEqual(2, len(self.client._api_request.mock_calls))
         self.client._api_request.assert_any_call(
             "GET", "/data/dns/zone/", params={"_query": '{"for_fqdn": "example.com"}'}
-        )
-        self.client._api_request.assert_any_call(
-            "GET", "/data/dns/record/?_query=%7B%22zone%22:%7B%22id%22:123%7D%7D"
         )
         self.client._api_request.assert_any_call(
             "PATCH",
@@ -252,7 +222,7 @@ class ServiceAPIClientTest(unittest.TestCase):
                                 },
                                 "ttl": 60,
                                 "mx_preference": None,
-                                "rdata": self.record_content,
+                                "rdata": f'"{self.record_content}"',
                                 "effective_rdata": self.record_content,
                                 "_title": f'_acme_challenge TXT "{self.record_content}"',
                                 "_target": "dns_rr",
@@ -269,7 +239,7 @@ class ServiceAPIClientTest(unittest.TestCase):
         self.client._api_request = mock.MagicMock(
             side_effect=api_response_helper_existing_acme_rr
         )
-        self.client.del_txt_record(DOMAIN, self.record_name)
+        self.client.del_txt_record(DOMAIN, self.record_name, self.record_content)
         self.assertEqual(3, len(self.client._api_request.mock_calls))
         self.client._api_request.assert_any_call(
             "GET", "/data/dns/zone/", params={"_query": '{"for_fqdn": "example.com"}'}
@@ -299,6 +269,7 @@ class ServiceAPIClientTest(unittest.TestCase):
             self.client.del_txt_record,
             DOMAIN,
             self.record_name,
+            self.record_content,
         )
 
     def test_del_txt_record_fail_to_find_domain(self):
@@ -314,6 +285,7 @@ class ServiceAPIClientTest(unittest.TestCase):
             self.client.del_txt_record,
             DOMAIN,
             self.record_name,
+            self.record_content,
         )
 
 
