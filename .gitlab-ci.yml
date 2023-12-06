@@ -30,7 +30,7 @@ publish_universal:
   stage: publish
   <<: *env_before_script
   script:
-    - twine upload --disable-progress-bar dist/*
+    - twine upload -p pypi-$TWINE_TOKEN --disable-progress-bar dist/*
   needs:
     - build_universal
   only:
