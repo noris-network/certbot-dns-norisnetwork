@@ -3,7 +3,8 @@ stages:
 - publish
 - release
 
-image: $IMAGE_REPOSITORY/python:3.10-alpine
+variables:
+  DOCKER_AUTH_CONFIG: $DOCKER_AUTH_CONFIG_HARBOR
 
 .env_before_script: &env_before_script
   before_script:
