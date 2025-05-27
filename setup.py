@@ -10,8 +10,8 @@ with open(os.path.join(my_path, "README.md")) as readme_file:
     long_description = readme_file.read()
 
 install_requires = [
-    "certbot",
-    "requests",
+    "certbot==4.0.0",
+    "requests==2.32.3",
 ]
 
 dev_requirements = [
@@ -53,10 +53,10 @@ setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Topic :: Internet :: Name Service (DNS)",
         "Topic :: Security",
         "Topic :: System :: Systems Administration",
