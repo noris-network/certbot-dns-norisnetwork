@@ -178,7 +178,7 @@ Use **pylint** for static code analyzing:
 
 ```sh
 pylint certbot_dns_norisnetwork/
-pytlint tests/
+pylint tests/
 ```
 
 #### Type Annotations Checker
