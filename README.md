@@ -147,7 +147,7 @@ docker run --rm \
     --agree-tos \
     --keep-until-expiring --non-interactive \
     --server https://acme-v02.api.letsencrypt.org/directory \
-    -m 'user@mail.com'
+    -m 'user@mail.com' \
     -d example.com -d '*.subdomain.example.com'
 ```
 
@@ -192,13 +192,16 @@ mypy tests/
 
 ### New Release
 
-Use **bump2version** for release versioning.
+We adhere to the Semantic Versioning.
+New packages are published only if a git tag is provided.
 
-Run the following commands to trigger a new release:
+* Make sure the current commit passes the CI.
+* Determine the correct new version number adhering to the semantic versioning.
+* Push an annotated tag with the correct version:
 
 ```sh
-bump2version patch # possible: major | minor | patch
-git push <remote-repo> && git push <remote-repo> --tags
+git tag -a -m "Release v0.4.1" v0.4.1
+git push origin v0.4.1
 ```
 
 This will adjust the version appropriately and create a tagged commit that will act as a trigger for the build and publish GitLab pipelines.
