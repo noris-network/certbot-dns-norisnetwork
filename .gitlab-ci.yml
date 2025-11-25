@@ -49,6 +49,7 @@ docker_image_release:
   when: delayed
   start_in: 300 seconds
   needs:
+    - build_universal
     - publish_universal
   only:
     - tags
